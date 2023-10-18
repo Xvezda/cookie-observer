@@ -1,24 +1,12 @@
 /** @see https://wicg.github.io/cookie-store/#dictdef-cookielistitem */
-interface CookieListItem {
+interface CookieItem {
   name: string;
   value: string;
 }
 
-/** @see https://wicg.github.io/cookie-store/#typedefdef-cookielist */
-type CookieList = CookieListItem[];
-
-interface ICookieStore extends EventTarget {
-  get(name: string): Promise<CookieListItem | null>;
-  getAll(name?: string): Promise<CookieList>;
-  set(name: string, value: string): Promise<undefined>;
-  delete(name: string): Promise<undefined>;
-
-  onchange: ((this: ICookieStore, ev: Event) => any) | null;
-}
-
 interface CookieChangeEventProperties {
-  changed: CookieList;
-  deleted: Pick<CookieListItem, 'name'>[];
+  changed: CookieItem[];
+  deleted: Pick<CookieItem, 'name'>[];
 }
 
 export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> {
@@ -34,9 +22,9 @@ export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> 
   }
 }
 
-export class CookieStore extends EventTarget implements ICookieStore {
+export class CookieStore extends EventTarget {
   private readonly cookies: Map<string, string>;
-  private eventHandler: ((this: ICookieStore, ev: Event) => any) | null = null;
+  private eventHandler: ((this: CookieStore, ev: Event) => any) | null = null;
 
   constructor(cookie: string = '') {
     super();
@@ -49,7 +37,7 @@ export class CookieStore extends EventTarget implements ICookieStore {
       }, new Map());
   }
 
-  async get(name: string) {
+  async get(name: string): Promise<CookieItem | null> {
     if (!this.cookies.has(name)) {
       return null;
     }
@@ -60,7 +48,7 @@ export class CookieStore extends EventTarget implements ICookieStore {
     };
   }
 
-  async getAll(name?: string) {
+  async getAll(name?: string): Promise<CookieItem[]> {
     if (typeof name !== 'undefined') {
       const item = await this.get(name);
       if (item === null) {
@@ -73,7 +61,7 @@ export class CookieStore extends EventTarget implements ICookieStore {
       .map(([name, value ]) => ({ name, value }));
   }
 
-  async set(name: string, value: string) {
+  async set(name: string, value: string): Promise<undefined> {
     this.cookies.set(name, value);
 
     const event = new CookieChangeEvent('change', { changed: [{ name, value }] });
@@ -82,7 +70,7 @@ export class CookieStore extends EventTarget implements ICookieStore {
     return undefined;
   }
 
-  async delete(name: string) {
+  async delete(name: string): Promise<undefined> {
     this.cookies.delete(name);
 
     const event = new CookieChangeEvent('change', { deleted: [{ name }] });
