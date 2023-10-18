@@ -22,7 +22,7 @@ interface CookieChangeEventProperties {
 }
 
 export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> {
-  constructor(type: 'cookiechange', options?: Partial<CookieChangeEventProperties>) {
+  constructor(type: 'change', options?: Partial<CookieChangeEventProperties>) {
     super(
       type, {
         detail: {
@@ -36,21 +36,17 @@ export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> 
 
 export class CookieStore extends EventTarget implements ICookieStore {
   _cookies: Map<string, string>;
-  _eventBus: EventTarget = new EventTarget;
   _eventHandler: ((this: ICookieStore, ev: Event) => any) | null = null;
 
   constructor(cookie: string = '') {
     super();
 
     this._cookies = cookie.split('; ')
+      .filter(Boolean)
       .reduce((map, cookie) => {
         const [name, value] = cookie.split('=');
         return map.set(name, value);
       }, new Map());
-
-    this._eventBus.addEventListener('cookiechange', (e) => {
-      this.dispatchEvent(e);
-    });
   }
 
   async get(name: string) {
@@ -80,8 +76,8 @@ export class CookieStore extends EventTarget implements ICookieStore {
   async set(name: string, value: string) {
     this._cookies.set(name, value);
 
-    const event = new CookieChangeEvent('cookiechange', { changed: [{ name, value }] });
-    this._eventBus.dispatchEvent(event);
+    const event = new CookieChangeEvent('change', { changed: [{ name, value }] });
+    this.dispatchEvent(event);
 
     return undefined;
   }
@@ -89,8 +85,8 @@ export class CookieStore extends EventTarget implements ICookieStore {
   async delete(name: string) {
     this._cookies.delete(name);
 
-    const event = new CookieChangeEvent('cookiechange', { deleted: [{ name }] });
-    this._eventBus.dispatchEvent(event);
+    const event = new CookieChangeEvent('change', { deleted: [{ name }] });
+    this.dispatchEvent(event);
 
     return undefined;
   }
