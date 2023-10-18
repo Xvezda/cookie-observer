@@ -35,13 +35,13 @@ export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> 
 }
 
 export class CookieStore extends EventTarget implements ICookieStore {
-  _cookies: Map<string, string>;
-  _eventHandler: ((this: ICookieStore, ev: Event) => any) | null = null;
+  private readonly cookies: Map<string, string>;
+  private eventHandler: ((this: ICookieStore, ev: Event) => any) | null = null;
 
   constructor(cookie: string = '') {
     super();
 
-    this._cookies = cookie.split('; ')
+    this.cookies = cookie.split('; ')
       .filter(Boolean)
       .reduce((map, cookie) => {
         const [name, value] = cookie.split('=');
@@ -50,13 +50,13 @@ export class CookieStore extends EventTarget implements ICookieStore {
   }
 
   async get(name: string) {
-    if (!this._cookies.has(name)) {
+    if (!this.cookies.has(name)) {
       return null;
     }
 
     return {
       name,
-      value: this._cookies.get(name)!,
+      value: this.cookies.get(name)!,
     };
   }
 
@@ -69,12 +69,12 @@ export class CookieStore extends EventTarget implements ICookieStore {
       return [item];
     }
 
-    return Array.from(this._cookies)
+    return Array.from(this.cookies)
       .map(([name, value ]) => ({ name, value }));
   }
 
   async set(name: string, value: string) {
-    this._cookies.set(name, value);
+    this.cookies.set(name, value);
 
     const event = new CookieChangeEvent('change', { changed: [{ name, value }] });
     this.dispatchEvent(event);
@@ -83,7 +83,7 @@ export class CookieStore extends EventTarget implements ICookieStore {
   }
 
   async delete(name: string) {
-    this._cookies.delete(name);
+    this.cookies.delete(name);
 
     const event = new CookieChangeEvent('change', { deleted: [{ name }] });
     this.dispatchEvent(event);
@@ -92,16 +92,16 @@ export class CookieStore extends EventTarget implements ICookieStore {
   }
 
   get onchange() {
-    return this._eventHandler;
+    return this.eventHandler;
   }
 
   set onchange(handler) {
     if (!handler) {
-      this.removeEventListener('change', this._eventHandler);
+      this.removeEventListener('change', this.eventHandler);
       return;
     }
-    this._eventHandler = handler.bind(this);
+    this.eventHandler = handler.bind(this);
 
-    this.addEventListener('change', this._eventHandler);
+    this.addEventListener('change', this.eventHandler);
   }
 }
