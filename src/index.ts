@@ -86,6 +86,7 @@ export class CookieStore extends EventTarget {
   set onchange(handler) {
     if (!handler) {
       this.removeEventListener('change', this.eventHandler);
+      this.eventHandler = null;
       return;
     }
     this.eventHandler = handler.bind(this);
