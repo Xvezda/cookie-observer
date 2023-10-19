@@ -1,5 +1,5 @@
-import { describe, test ,expect, vi } from 'vitest';
-import { CookieStore, CookieChangeEvent } from '.';
+import { describe, test ,expect, vi, beforeEach, afterEach } from 'vitest';
+import { CookieStore, CookieChangeEvent, CookieObserver } from '.';
 
 const document = {
   cookie: '',
@@ -64,5 +64,41 @@ describe('store', () => {
     expect(stub2.mock.lastCall[0]).toBeInstanceOf(CookieChangeEvent);
     expect(stub.mock.lastCall[0].detail).toEqual({ changed: [], deleted: expect.arrayContaining([{ name: 'foo' }]) });
     expect(stub2.mock.lastCall[0].detail).toEqual({ changed: [], deleted: expect.arrayContaining([{ name: 'foo' }]) });
+  });
+});
+
+describe('observer', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('callback', async () => {
+    document.cookie = '';
+    const store = new CookieStore(document);
+
+    const callback = vi.fn();
+    const observer = new CookieObserver(callback);
+    observer.observe(store);
+
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(callback).not.toBeCalled();
+
+    document.cookie = 'foo=bar';
+    await vi.runOnlyPendingTimersAsync();
+
+    expect(callback).toBeCalledWith({
+      changed: [{ name: 'foo', value: 'bar' }],
+      deleted: [],
+    });
+
+    observer.unobserve();
+    document.cookie = 'fizz=buzz';
+
+    expect(callback).toHaveBeenCalledOnce();
   });
 });
