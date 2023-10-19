@@ -23,18 +23,26 @@ export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> 
 }
 
 export class CookieStore extends EventTarget {
-  private readonly cookies: Map<string, string>;
+  private cookies: Map<string, string>;
+  private document: { cookie: string };
   private eventHandler: ((this: CookieStore, ev: Event) => any) | null = null;
 
-  constructor(cookie: string = '') {
+  constructor(document: { cookie: string }) {
     super();
 
-    this.cookies = cookie.split('; ')
+    this.cookies = document.cookie.split('; ')
       .filter(Boolean)
       .reduce((map, cookie) => {
         const [name, value] = cookie.split('=');
         return map.set(name, value);
-      }, new Map());
+      }, new Map())
+
+    this.document = document;
+    this.addEventListener('change', () => {
+      this.document.cookie = Array.from(this.cookies)
+        .reduce((acc, [k, v]) => acc.concat(`${k}=${v}`), [] as string[])
+        .join('; ');
+    });
   }
 
   async get(name: string): Promise<CookieItem | null> {
