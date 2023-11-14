@@ -5,6 +5,10 @@ const document = {
   cookie: '',
 };
 
+afterEach(() => {
+  document.cookie = '';
+});
+
 describe('store', () => {
   test('cookie parsing', async () => {
     let store, result;
@@ -77,7 +81,6 @@ describe('observer', () => {
   });
 
   test('callback', async () => {
-    document.cookie = '';
     const store = new CookieStore(document);
 
     const callback = vi.fn();
