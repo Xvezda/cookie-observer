@@ -171,7 +171,15 @@ export class CookieObserver {
         }
         previousCookie = document.cookie;
 
-        this.callback(e);
+        const { changed = [], deleted = [] } = e;
+        const stripExtraFields = (cookies) => {
+          return cookies.map(({ name, value }) => ({ name, value }));
+        };
+
+        this.callback({
+          deleted: stripExtraFields(deleted),
+          changed: stripExtraFields(changed),
+        });
       };
     }
   }
