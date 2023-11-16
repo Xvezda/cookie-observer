@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsup src/index.ts",
-    "test": "vitest",
+    "test": "vitest run --typecheck",
     "example": "parcel example/index.html",
     "format": "prettier . --write"
   },

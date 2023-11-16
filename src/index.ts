@@ -53,8 +53,8 @@ export class CookieStore extends EventTarget {
         return map.set(name, value);
       }, new Map());
 
-    const deletedCookies = new Set();
-    const changedCookies = new Map();
+    const deletedCookies = new Set<string>();
+    const changedCookies = new Map<string, string>();
     this.cookies.forEach((value, name) => {
       if (!newCookies.has(name)) {
         deletedCookies.add(name);
@@ -171,14 +171,12 @@ export class CookieObserver {
         }
         previousCookie = document.cookie;
 
-        const { changed = [], deleted = [] } = e;
-        const stripExtraFields = (cookies) => {
-          return cookies.map(({ name, value }) => ({ name, value }));
-        };
+        const { changed = [], deleted = [] } =
+          e as unknown as CookieChangeEventProperties;
 
         this.callback({
-          deleted: stripExtraFields(deleted),
-          changed: stripExtraFields(changed),
+          changed: changed.map(({ name, value }) => ({ name, value })),
+          deleted: deleted.map(({ name }) => ({ name })),
         });
       };
     }
