@@ -11,57 +11,74 @@ interface CookieChangeEventProperties {
 
 export class CookieChangeEvent extends CustomEvent<CookieChangeEventProperties> {
   constructor(type: 'change', options?: Partial<CookieChangeEventProperties>) {
-    super(
-      type, {
-        detail: {
-          changed: Array.isArray(options?.changed) ? options!.changed : [],
-          deleted: Array.isArray(options?.deleted) ? options!.deleted : [],
-        }
-      }
-    );
+    super(type, {
+      detail: {
+        changed: Array.isArray(options?.changed) ? options!.changed : [],
+        deleted: Array.isArray(options?.deleted) ? options!.deleted : [],
+      },
+    });
   }
 }
 
 export class CookieStore extends EventTarget {
   private cookies: Map<string, string> = new Map();
   private document: { cookie: string };
-  private eventHandler: ((ev: Event) => any) | ((this: CookieStore, ev: Event) => any) | null = null;
+  private eventHandler:
+    | ((ev: Event) => any)
+    | ((this: CookieStore, ev: Event) => any)
+    | null = null;
   public readonly _isPolyfill = true;
 
   constructor(document: { cookie: string }) {
     super();
 
     this.document = document;
-    this._parse();
-
-    this.addEventListener('change', () => {
-      this.document.cookie = Array.from(this.cookies)
-        .reduce((acc, [k, v]) => acc.concat(`${k}=${v}`), [] as string[])
-        .join('; ');
-    });
+    this._import();
   }
 
   /** @package */
-  _parse() {
-    const newCookies = this.document.cookie.split('; ')
+  _export() {
+    this.document.cookie = Array.from(this.cookies)
+      .reduce((acc, [k, v]) => acc.concat(`${k}=${v}`), [] as string[])
+      .join('; ');
+  }
+
+  /** @package */
+  _import() {
+    const newCookies = this.document.cookie
+      .split('; ')
       .filter(Boolean)
       .reduce((map, cookie) => {
         const [name, value] = cookie.split('=');
         return map.set(name, value);
       }, new Map());
 
+    const deletedCookies = new Set();
+    const changedCookies = new Map();
     this.cookies.forEach((value, name) => {
       if (!newCookies.has(name)) {
-        this.dispatchEvent(new CookieChangeEvent('change', { deleted: [{ name }] }));
+        deletedCookies.add(name);
       } else if (newCookies.get(name) !== value) {
-        this.dispatchEvent(new CookieChangeEvent('change', { changed: [{ name, value: newCookies.get(name) }] }));
+        changedCookies.set(name, newCookies.get(name));
       }
     });
 
     newCookies.forEach((value, name) => {
       if (!this.cookies.has(name) || this.cookies.get(name) !== value) {
-        this.dispatchEvent(new CookieChangeEvent('change', { changed: [{ name, value }] }));
+        changedCookies.set(name, value);
       }
+    });
+
+    deletedCookies.forEach((name) => {
+      this.dispatchEvent(
+        new CookieChangeEvent('change', { deleted: [{ name }] }),
+      );
+    });
+
+    changedCookies.forEach((value, name) => {
+      this.dispatchEvent(
+        new CookieChangeEvent('change', { changed: [{ name, value }] }),
+      );
     });
 
     this.cookies = newCookies;
@@ -87,15 +104,17 @@ export class CookieStore extends EventTarget {
       return [item];
     }
 
-    return Array.from(this.cookies)
-      .map(([name, value ]) => ({ name, value }));
+    return Array.from(this.cookies).map(([name, value]) => ({ name, value }));
   }
 
   async set(name: string, value: string): Promise<undefined> {
     this.cookies.set(name, value);
 
-    const event = new CookieChangeEvent('change', { changed: [{ name, value }] });
+    const event = new CookieChangeEvent('change', {
+      changed: [{ name, value }],
+    });
     this.dispatchEvent(event);
+    this._export();
 
     return undefined;
   }
@@ -105,6 +124,7 @@ export class CookieStore extends EventTarget {
 
     const event = new CookieChangeEvent('change', { deleted: [{ name }] });
     this.dispatchEvent(event);
+    this._export();
 
     return undefined;
   }
@@ -134,14 +154,25 @@ export class CookieObserver {
   }
 
   observe(store: CookieStore) {
-    store.onchange = (e: Event) => {
-      this.callback((e as CookieChangeEvent).detail);
-    };
-
     if (store?._isPolyfill) {
+      store.onchange = (e: Event) => {
+        this.callback((e as CookieChangeEvent).detail);
+      };
+
       this.intervalId = setInterval(() => {
-        store._parse();
+        store._import();
       }, 100);
+    } else {
+      let previousCookie = document.cookie;
+
+      store.onchange = (e) => {
+        if (document.cookie === previousCookie) {
+          return;
+        }
+        previousCookie = document.cookie;
+
+        this.callback(e);
+      };
     }
   }
 
