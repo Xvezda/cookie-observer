@@ -1,19 +1,31 @@
 import { test, expect } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, browserName }) => {
 	await page.goto('http://127.0.0.1:1234');
 });
 
-test('open script on browser', async ({ page }) => {
-	await page.getByRole('button', { name: 'foo' }).click();
+test('works on every browser', async ({ page }) => {
+	const store = await page.evaluate(() => window.cookieStore);
 
-	expect(await page.evaluate(() => {
-		return document.cookie;
-	})).toEqual(expect.stringContaining('foo=123'));
+	switch (browserName) {
+		case 'webkit':
+		case 'firefox':
+			expect(store).not.toBeDefined();
+			break;
+		case 'chromium':
+		default:
+			expect(store).toBeDefined();
+			break;
+	}
 
-	await page.getByRole('button', { name: 'bar' }).click();
+	const msgPromise = page.waitForEvent('console', (e) => e.type() === 'debug');
 
-	expect(await page.evaluate(() => {
-		return document.cookie;
-	})).toEqual(expect.stringContaining('bar=456'));
+	await page.evaluate(() => {
+		document.cookie = 'foo=bar';
+	});
+
+	const msg = await msgPromise;
+	const entries = await msg.args()[0].jsonValue();
+
+	expect(entries.changed).toContainEqual({ name: 'foo', value: 'bar' });
 });
