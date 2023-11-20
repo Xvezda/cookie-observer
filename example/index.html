@@ -5,6 +5,8 @@
     <title>Cookie observer example</title>
   </head>
   <body>
+    <button id="foo">foo</button>
+    <button id="bar">bar</button>
     <script type="module">
       import { CookieStore, CookieObserver } from '../src/index.ts';
 
@@ -13,13 +15,24 @@
           ? cookieStore
           : new CookieStore(document);
 
-      const observer = new CookieObserver(({ changed }) => {
-        console.log(changed);
+      const observer = new CookieObserver((entries) => {
+        console.log(JSON.stringify(entries));
       });
       observer.observe(store);
 
       console.log('store:', store);
       console.log('observer:', observer);
+
+      const fooButton = document.getElementById('foo');
+      const barButton = document.getElementById('bar');
+
+      fooButton.addEventListener('click', () => {
+      	store.set('foo', '123');
+      });
+
+      barButton.addEventListener('click', () => {
+        document.cookie = 'bar=456';
+      });
     </script>
   </body>
 </html>
