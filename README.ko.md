@@ -1,4 +1,8 @@
 # CookieObserver
+
+| [English](README.md) |
+| -------------------- |
+
 `document.cookie`와 `cookieStore`를 위한 옵저버 형태 구현체와 미지원 브라우저를 위한 `cookieStore`의 유사 폴리필 클래스를 제공합니다.
 
 ## 한계

@@ -1,4 +1,8 @@
 # CookieObserver
+
+| [한국어](README.ko.md) |
+| -------------------- |
+
 Provides an observer-style implementation for `document.cookie` and `cookieStore`, along with a polyfill class for `cookieStore` for unsupported browsers.
 
 ## Limitations
