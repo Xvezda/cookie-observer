@@ -1,0 +1,8 @@
+.github/
+e2e/
+example/
+*.ts
+*.test.*
+*config.*
+.parcel-cache/
+playwright-report/
