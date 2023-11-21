@@ -1,6 +1,6 @@
 {
   "name": "cookie-observer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Observer for cookie.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
