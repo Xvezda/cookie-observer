@@ -2,9 +2,11 @@
   "name": "cookie-observer",
   "version": "0.0.0",
   "description": "Observer for cookie.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
   "scripts": {
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
     "test": "tsc && vitest run --typecheck",
     "example": "parcel example/index.html",
     "format": "prettier . --write"
