@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test.beforeEach(async ({ page, browserName }) => {
+test.beforeEach(async ({ page }) => {
 	await page.goto('http://127.0.0.1:1234');
 });
 
-test('works on every browser', async ({ page }) => {
+test('works on every browser', async ({ browserName, page }) => {
+	// @ts-expect-error: `cookieStore` does not exists
 	const store = await page.evaluate(() => window.cookieStore);
 
 	switch (browserName) {
