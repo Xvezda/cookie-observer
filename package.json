@@ -1,7 +1,7 @@
 {
   "name": "cookie-observer",
   "version": "0.0.0",
-  "description": "",
+  "description": "Observer for cookie.",
   "main": "index.js",
   "scripts": {
     "build": "tsup src/index.ts",
