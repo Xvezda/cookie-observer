@@ -20,6 +20,7 @@
   "author": "Xvezda <xvezda@naver.com>",
   "license": "MIT",
   "devDependencies": {
+    "@changesets/cli": "^2.26.2",
     "@playwright/test": "^1.39.0",
     "@types/node": "^20.9.0",
     "parcel": "^2.10.2",
