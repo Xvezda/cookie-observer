@@ -6,3 +6,4 @@ example/
 *config.*
 .parcel-cache/
 playwright-report/
+.changeset/
