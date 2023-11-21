@@ -9,7 +9,12 @@
     "example": "parcel example/index.html",
     "format": "prettier . --write"
   },
-  "keywords": [],
+  "keywords": [
+    "cookie",
+    "observer",
+    "polyfill",
+    "ponyfill"
+  ],
   "author": "Xvezda <xvezda@naver.com>",
   "license": "MIT",
   "devDependencies": {
